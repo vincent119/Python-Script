@@ -12,7 +12,7 @@ from pysnmp.entity.rfc3413.oneliner import cmdgen
 #     Created date 20160929
 #
 #     T3510 溫度感測器 溫度檢查 for Nagios
-#
+#   http://www.cometsystem.com/products/reg-T3510
 #
 
 def validip(ip):
