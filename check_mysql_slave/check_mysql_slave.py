@@ -202,7 +202,7 @@ def get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqNumber,db
   if (not is_number(Seconds_Behind_Master)) or (not Seconds_Behind_Master):
     Seconds_Behind_Master = 0
   Exec_Master_Log_Pos = quertString[21]
-  if Slave_IO_Running != '"Yes"' or Slave_SQL_Running != '"Yes"' or Seconds_Behind_Master > MasterDelayCount:
+  if (Slave_IO_Running != '"Yes"') or (Slave_SQL_Running != '"Yes"') or (Seconds_Behind_Master < MasterDelayCount):
     Slave_IO_State = quertString[0].split("[")[1]
     if Slave_IO_State == '""':
       Slave_IO_State = 'db sync broke down'
@@ -215,7 +215,7 @@ def get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqNumber,db
       
   else:
     messg = custName +' '+ serviceName +' '+slaveIP+ ' Status "Yes" with Slave_IO_Running and Slave_SQL_Running'
-    writeLog(messg,'')
+    writeLog(messg,'info')
     
   ''' connection close '''
   connectMycat.close()
@@ -255,7 +255,7 @@ def message_tg(dateTime,dict_obj):
       msgtmp = msgtmp + msg1
     msg = msg +  msgtmp
   #print(msg)
-  bot = telepot.Bot('764708613:AAEu_JDEU6YDoXuXCvsNuYQWLkIUmKUKUtk')
+  #bot = telepot.Bot('764708613:AAEu_JDEU6YDoXuXCvsNuYQWLkIUmKUKUtk')
   tgStatus = bot.sendMessage(-1001278170500, text=msg,parse_mode='Markdown' )
   writeLog(tgStatus,'info')
 
@@ -284,7 +284,7 @@ def main():
       else:
        tmpdict = get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqDbNumber,db_Name)
        dict2[seqDbNumber] = tmpdict
-       print(dict2)
+       #print(dict2)
        dateTime =  (datetime.now()).strftime('%Y%m%d-%H%m%S')
        
     dict1 = {custName:dict2}  
