@@ -1,25 +1,17 @@
-cp132:
+test:
   0: 
-  - slaveIP: '172.29.168.11'
-  - dbUser: "ApmAc"
-  - dbPwd: "Wqe8ydCO"
+  - slaveIP: '172.29.168.111'
+  - dbUser: "user"
+  - dbPwd: "password"
   - port: '3306' 
   - disalbe_check: False
-  - service_name: SG04-Mysql-002
-  - db_Name: boss1
+  - service_name: Mysql-001
+  - db_Name: test1
   1: 
-  - slaveIP: '172.29.169.121'
-  - dbUser: "ApmAc"
-  - dbPwd: "Wqe8ydCO"
+  - slaveIP: '172.29.168.112'
+  - dbUser: "user"
+  - dbPwd: "password"
   - port: '3306' 
   - disalbe_check: False
-  - service_name: SG04-Mysql-003
-  - db_Name: boss1
-  2: 
-  - slaveIP: '172.25.247.10'
-  - dbUser: "ApmAc"
-  - dbPwd: "Wqe8ydCO"
-  - port: '3306' 
-  - disalbe_check: False
-  - service_name: HK02-MYSQL-030-CP132-001
-  - db_Name: boss1
+  - service_name: Mysql-002
+  - db_Name: test1
