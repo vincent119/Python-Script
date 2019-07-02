@@ -22,6 +22,7 @@ logPath='/opt/logs/check_mysql_slave'
 logConf='/opt/APP/APM_Script/check_mysql_slave/logging.yaml'
 MasterDelayCount = 5
 DBconnect_timeout = 10
+
 def options():
     #usage = "usage: %prog [options] arg1 arg2"
     usage = "usage: %prog [options]"
@@ -189,6 +190,7 @@ def get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqNumber,db
   '''
   for p in quertString:
     print(p)
+  
    Slave_IO_State == column(1)
    Slave_IO_Running == column(10)
    Slave_SQL_Running == column(11)
@@ -201,6 +203,7 @@ def get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqNumber,db
   Seconds_Behind_Master = quertString[32]
   if (not is_number(Seconds_Behind_Master)) or (not Seconds_Behind_Master):
     Seconds_Behind_Master = 0
+    
   Exec_Master_Log_Pos = quertString[21]
   if (Slave_IO_Running != '"Yes"') or (Slave_SQL_Running != '"Yes"') or (Seconds_Behind_Master < MasterDelayCount):
     Slave_IO_State = quertString[0].split("[")[1]
@@ -209,14 +212,18 @@ def get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqNumber,db
     writeLog(serviceName+' '+ slaveIP+' '+Slave_IO_State,'error')
     dictSeq = {}
     dictSeq = {'Slave_IO_Running':Slave_IO_Running,'Slave_SQL_Running':Slave_SQL_Running\
-       ,'slaveIP':slaveIP,'Slave_IO_State':Slave_IO_State,'serviceName':serviceName,'db_Name':db_Name,'Seconds_Behind_Master':Seconds_Behind_Master}
-
+       ,'slaveIP':slaveIP,'Slave_IO_State':Slave_IO_State,'serviceName':serviceName,'db_Name':db_Name,\
+       'Seconds_Behind_Master':Seconds_Behind_Master}
     return dictSeq
-      
+    
   else:
     messg = custName +' '+ serviceName +' '+slaveIP+ ' Status "Yes" with Slave_IO_Running and Slave_SQL_Running'
     writeLog(messg,'info')
-    
+    # dictSeq = {'Slave_IO_Running':Slave_IO_Running,'Slave_SQL_Running':Slave_SQL_Running\
+       # ,'slaveIP':slaveIP,'Slave_IO_State':Slave_IO_State,'serviceName':serviceName,'db_Name':db_Name,\
+       # 'Seconds_Behind_Master':Seconds_Behind_Master}
+    # return dictSeq,False
+
   ''' connection close '''
   connectMycat.close()
   reload(sys)
@@ -225,12 +232,15 @@ def get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqNumber,db
 def message_tg(dateTime,dict_obj):
   DATE = dateTime
   msgtmp = ''
-  
+  '''
+  for cid,keytmp2 in dict_obj.items():
+    print(cid)
+    print(keytmp2[0]['Seconds_Behind_Master'])
+  '''
   for cid,keytmp in dict_obj.items():
     custId = cid
     msg = '''`{CUSTNAME} 数据库主从同步中断 告警`
     时间: {DATETIME}'''.format(CUSTNAME = custId,DATETIME = DATE)
-    
     for keys in keytmp:
       keyCount = keys
       serviceName = keytmp[keys]['serviceName']
@@ -255,7 +265,7 @@ def message_tg(dateTime,dict_obj):
       msgtmp = msgtmp + msg1
     msg = msg +  msgtmp
   #print(msg)
-  #bot = telepot.Bot('764708613:AAEu_JDEU6YDoXuXCvsNuYQWLkIUmKUKUtk')
+  bot = telepot.Bot('764708613:AAEu_JDEU6YDoXuXCvsNuYQWLkIUmKUKUtk')
   tgStatus = bot.sendMessage(-1001278170500, text=msg,parse_mode='Markdown' )
   writeLog(tgStatus,'info')
 
@@ -266,9 +276,6 @@ def main():
   tg_status = 0
   for k in (read_conf):
     custName = str((list(read_conf)[k_count]))
-    dict1 = {}
-    dict2 ={}  
-    
     for seqDbNumber in (read_conf[k]):
       slaveIP =  read_conf[k][seqDbNumber][0]['slaveIP']
       dbUser = read_conf[k][seqDbNumber][1]['dbUser']
@@ -278,19 +285,20 @@ def main():
       serviceName = read_conf[k][seqDbNumber][5]['service_name']
       db_Name = read_conf[k][seqDbNumber][6]['db_Name']
       #if disalbeCheck == True:
+      dict1 = {}
+      dict2 = {}  
       if disalbeCheck:
         #print (str(custName) + ' : ' + slaveIP + ' stop check status' )
         writeLog(serviceName + ' : ' + slaveIP + ' stop check status','info')
       else:
-       tmpdict = get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqDbNumber,db_Name)
-       dict2[seqDbNumber] = tmpdict
-       #print(dict2)
-       dateTime =  (datetime.now()).strftime('%Y%m%d-%H%m%S')
-       
-    dict1 = {custName:dict2}  
-    
-    if bool(dict1[custName]) and bool(dict1[custName][0]):
-      message_tg(dateTime,dict1)
+        tmpdict= get_repl_status(dbUser,dbPwd,slaveIP,sPort,serviceName,custName,seqDbNumber,db_Name)
+        if tmpdict != None: 
+          dict2[seqDbNumber] = tmpdict
+          dateTime =  (datetime.now()).strftime('%Y%m%d-%H%m%S')
+          dict1 = {custName:dict2} 
+          #if bool(dict1[custName]) and bool(dict1[custName][0]):
+            #print(dict1)
+          message_tg(dateTime,dict1)
       
     tg_status = tg_status + 1
     k_count = k_count + 1
